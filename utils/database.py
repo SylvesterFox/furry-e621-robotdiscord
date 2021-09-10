@@ -7,7 +7,7 @@ from utils.bot import settings_app
 def connect_data():
     settings = settings_app()
     if settings['heroku_mod']:
-        host = os.environ['host_base']
+        host = os.environ['DATABASE_HOST']
         database = os.environ['database']
         user = os.environ['user_base']
         password = os.environ['password']
