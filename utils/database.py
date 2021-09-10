@@ -16,7 +16,7 @@ def connect_data():
         host = "localhost"
         database = "e621tags"
         user = "postgres"
-        password = "0270"
+        password = "0000"
         return [host, database, user, password]
 
 def db_conn(func):
