@@ -1,8 +1,6 @@
 import aiohttp
 import logging
 
-from requests.auth import HTTPBasicAuth
-
 
 class E621connect:
     def __init__(self, username, token):

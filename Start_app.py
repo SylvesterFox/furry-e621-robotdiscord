@@ -1,9 +1,9 @@
 import os
 import logging
 
+from discord_components import DiscordComponents
 from utils.bot import Bot
 from utils.bot import token
-
 
 
 start_app = Bot(
@@ -14,8 +14,11 @@ start_app = Bot(
 
 tokens = token()
 
+DiscordComponents(start_app)
+
 start_app.remove_command("help")
 
+# Logs
 logger = logging.getLogger('bot')
 logger.setLevel(logging.INFO)
 

@@ -3,6 +3,7 @@ import asyncio
 import discord
 import traceback
 import sys
+import math
 
 from discord.ext import commands
 from discord.ext.commands import errors
@@ -48,17 +49,16 @@ class Events(commands.Cog):
                         pass
                     else:
                         update_post_id(id=item['id'], post_id=data['posts'][0]['id'])
+                        self.logger.info(f"Send post, id post:{data['posts'][0]['id']}")
                         return data
                 except Exception as e:
                     pass
-
 
             for item in get_all():
                 post_response = await get_response_post()
                 if post_response:
                     await send_post(item=item, data=post_response)
 
-                    
             await asyncio.sleep(120)
 
     @commands.Cog.listener()
@@ -68,11 +68,10 @@ class Events(commands.Cog):
         create_table()
         await self.bot.loop.create_task(self.task_parser())
 
-    
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
-            await ctx.send_help(ctx.command)
+            await ctx.send(ctx.command)
 
         if isinstance(err, errors.CommandNotFound):
             pass
@@ -90,6 +89,107 @@ class Events(commands.Cog):
 
         if isinstance(err, commands.ArgumentParsingError):
             await ctx.send(err)
+
+        if isinstance(err, errors.BotMissingPermissions):
+            await ctx.send("You are not authorized to use this command.")
+            
+    @commands.group(
+        name="Help",
+        aliases=['help', 'h', 'commands'],
+        description="Help command"
+    )
+    async def _help(self, ctx):
+        if ctx.invoked_subcommand is None:
+            cog = 1
+            helpEmbed = discord.Embed(
+                title="Help command!",
+                color=discord.Colour.blurple()
+            )
+            helpEmbed.set_thumbnail(url=ctx.author.avatar_url)
+            helpEmbed.set_author(icon_url=self.bot.user.avatar_url, name='Prefix bot: `d!`')
+
+            cogs = [c for c in self.bot.cogs.keys()]
+            cogs.remove('Events')
+
+            totalPages = math.ceil(len(cogs) / 4)
+
+            cog = int(cog)
+            if cog > totalPages or cog < 1:
+                await ctx.send(f"Invalid page number: `{cog}`\nAlternatively, simpy run `help` to see the first help page")
+                return
+
+            neededCogs = []
+            for i in range(4):
+                x = i + (int(cog) - 1) * 4
+                try:
+                    neededCogs.append(cogs[x])
+                except IndexError:
+                    pass
+
+            for cog in neededCogs:
+                commandList = ""
+                for command in self.bot.get_cog(cog).walk_commands():
+                    if command.hidden:
+                        continue
+                    elif command.parent != None:
+                        continue
+
+                    commandList += f"`{command.name}` - **{command.description}**\n"
+                commandList += "\n"
+
+                helpEmbed.add_field(name=cog, value=commandList, inline=False)
+
+            await ctx.send(embed=helpEmbed)
+
+    @_help.command(
+        name='command'
+    )
+    async def _command(self, ctx, command: str):
+        await ctx.send_help(command)
+
+    @_help.command(
+        name="page"
+    )
+    async def _page(self, ctx, cog: int):
+        helpEmbed = discord.Embed(
+            title="Help command!",
+            color=discord.Colour.blurple()
+        )
+        helpEmbed.set_thumbnail(url=ctx.author.avatar_url)
+        helpEmbed.set_author(icon_url=self.bot.user.avatar_url, name='Prefix bot: `d!`')
+
+        cogs = [c for c in self.bot.cogs.keys()]
+        cogs.remove('Events')
+
+        totalPages = math.ceil(len(cogs) / 4)
+
+        cog = int(cog)
+        if cog > totalPages or cog < 1:
+            await ctx.send(f"Invalid page number: `{cog}`\nAlternatively, simpy run `help` to see the first help page")
+            return
+
+        neededCogs = []
+        for i in range(4):
+            x = i + (int(cog) - 1) * 4
+            try:
+                neededCogs.append(cogs[x])
+            except IndexError:
+                pass
+
+        for cog in neededCogs:
+            commandList = ""
+            for command in self.bot.get_cog(cog).walk_commands():
+                if command.hidden:
+                    continue
+                elif command.parent != None:
+                    continue
+
+                commandList += f"`{command.name}` - **{command.description}**\n"
+            commandList += "\n"
+
+            helpEmbed.add_field(name=cog, value=commandList, inline=False)
+
+        await ctx.send(embed=helpEmbed)
 
 
 def setup(bot):

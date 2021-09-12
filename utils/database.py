@@ -4,6 +4,7 @@ import os
 
 from utils.bot import settings_app
 
+
 def connect_data():
     settings = settings_app()
     if settings['heroku_mod']:
@@ -19,14 +20,16 @@ def connect_data():
         password = "0000"
         return [host, database, user, password]
 
+
 def db_conn(func):
     data_conn = connect_data()
+
     def inner(*args, **kwargs):
         con = psycopg2.connect(
-        host = data_conn[0],
-        database=data_conn[1],
-        user=data_conn[2],
-        password=data_conn[3])
+            host =data_conn[0],
+            database=data_conn[1],
+            user=data_conn[2],
+            password=data_conn[3])
         res = func(*args, con=con, **kwargs)
         return res
     return inner
@@ -42,6 +45,7 @@ def create_table(con):
     except Exception as e:
         con.close()
 
+
 @db_conn
 def insert_data(con, guild_id: int, channel_id: int, tag: str, activate: bool, user: int, id_tag: int=0):
     try:
@@ -53,6 +57,7 @@ def insert_data(con, guild_id: int, channel_id: int, tag: str, activate: bool, u
         con.close()
         print(e)
 
+
 @db_conn
 def get_tags_server(con, guild_id: int, user_id: int):
     cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -61,12 +66,14 @@ def get_tags_server(con, guild_id: int, user_id: int):
     con.close()
     return res
 
+
 @db_conn
 def delete_tag(con, user_id: int, id: int):
     cur = con.cursor()
     cur.execute("DELETE FROM tag WHERE id = %s AND user_id = %s", (id, user_id))
     con.commit()
     con.close()
+
 
 @db_conn
 def get_all(con):
@@ -75,6 +82,7 @@ def get_all(con):
     res = cur.fetchall()
     con.close()
     return res
+
 
 @db_conn
 def update_post_id(con, id: int, post_id: id):
@@ -91,10 +99,27 @@ def update_activate(con, id: int, switch: bool):
     con.commit()
     con.close()
 
+
 @db_conn
-def get_activate(con, id: int):
+def get_tag_data(con, id: int):
     cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("SELECT activate, id, tag, channel_id FROM tag WHERE id = %s", (id, ))
     res = cur.fetchall()
     con.close()
     return res
+
+
+@db_conn
+def all_user_activate(con, user_id: int, switch: bool):
+    cur = con.cursor()
+    cur.execute("UPDATE tag SET activate = %s WHERE user_id = %s", (switch, user_id))
+    con.commit()
+    con.close()
+
+
+@db_conn
+def all_remove(con, user_id: int):
+    cur = con.cursor()
+    cur.execute("DELETE FROM tag WHERE user_id = %s", (user_id, ))
+    con.commit()
+    con.close()
