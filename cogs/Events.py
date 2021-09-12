@@ -71,7 +71,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
-            await ctx.send(ctx.command)
+            await ctx.send_help(ctx.command)
 
         if isinstance(err, errors.CommandNotFound):
             pass
@@ -92,7 +92,7 @@ class Events(commands.Cog):
 
         if isinstance(err, errors.BotMissingPermissions):
             await ctx.send("You are not authorized to use this command.")
-            
+
     @commands.group(
         name="Help",
         aliases=['help', 'h', 'commands'],
